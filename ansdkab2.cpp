@@ -17,7 +17,13 @@ public:
 
     Number() : value(nullptr), size(0) {} //default constructor 
 
-    Number(char* num) //constructor with string
+    ~Number() 
+    {
+        delete[] value;
+        value = nullptr;
+    }
+
+    Number(const char* num) //constructor with string
     {
         size = strlen(num); 
         value = new char[size+1];
@@ -27,6 +33,7 @@ public:
                 value[i] = num[i];
         }
     } 
+
     Number(char* values, long long sz) : value(values), size(sz) {}
 
     Number(const Number& other) : size(other.size) {
@@ -63,12 +70,12 @@ public:
     {
         long long resultsize = size + other.size; 
         char* resultNum = new char[resultsize];
-        memset(resultNum, 0, sizeof(char)); 
+        memset(resultNum, 0, resultsize*sizeof(char)); 
         for (int i = 0; i < size; ++i)
         {
             for (int j = 0; j < other.size; ++j)
             {
-                resultNum[i + j] += value[i] * value[j];
+                resultNum[i + j] += (value[i] - '0') * (value[j] - '0');
             }
         }
         shift(resultNum, resultsize); 
@@ -80,7 +87,7 @@ public:
     {
         long long resultsize = size + 1;
         char* resultNum = new char[resultsize];
-        memset(resultNum, 0, sizeof(char));
+        memset(resultNum, 0, resultsize * sizeof(char));
         for (int i = 0; i < size; ++i)
         {
             resultNum[i] = value[i] * num;
@@ -160,13 +167,13 @@ public:
     //    leadZero();  // исправленный вызов функции leadZero без аргумента
     //}
 
-    // Вывод числа
-    //void write() {
-    //    for (int i = 0; i < value.length(); i++) {
-    //        cout << value[i];
-    //    }
-    //    cout << "\n";
-    //}
+
+    void write() {
+        for (int i = 0; i < size; i++) {
+            cout << value[i] - '0';
+        }
+        cout << "\n";
+    }
 
     // Удаление ведущих нулей
     //void leadZero() {
@@ -281,18 +288,21 @@ public:
 int main() {
 
     /*Number res;
-    Number ost;   
+    Number ost; */  
 
     char* num1 = new char[1000]; 
-    char* num2 = new char[1000];
+    /*char* num2 = new char[1000];*/
 
-    cin >> num1 >> num2; 
+    cin >> num1; 
 
     Number Num1(num1);
-    Number Num2(num2);
+    /*Number Num2(num2);*/
+    Number res = Num1 * 3;
+    res.write();
 
 
-    res = num1.divide(num2);
+
+    /*res = num1.divide(num2);
     cout << "Num1: ";
     num1.write();
     cout << "Num2: ";
