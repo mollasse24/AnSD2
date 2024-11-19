@@ -1,317 +1,305 @@
 ﻿#include <iostream>
-#include <string>
-#include <cstdlib>
+#include <cstring>
 #include <ctime>
-#include <chrono>
-#include <algorithm>
+
+#define ull unsigned long long
+#define MIN_SIZE 10
 
 using namespace std;
-using namespace chrono;
 
-class Number {
-private:
-    char* value; // number
-    long long size; // size of number
+long long currentMemory = 0, maxMemory = 0;
+
+class BigInt {
+    bool sign = 0;
+    int size = 0;
+    char* arr = nullptr;
+
+    void resize(int new_size) {
+        char* new_arr = new char[new_size] {0};
+        currentMemory += new_size * sizeof(char); //+
+        int mn_size = (size < new_size ? size : new_size);
+        for (int i = 0; i < mn_size; i++)
+            new_arr[i] = arr[i];
+        delete[] arr;
+        currentMemory -= size * sizeof(char); //-
+        size = new_size;
+        arr = new_arr;
+        if (currentMemory > maxMemory)
+            maxMemory = currentMemory;
+    }
+
+    void remove_zeros() {
+        while (size > 1 && arr[size - 1] == 0)
+            size--;
+        resize(size);
+    }
+
+    void reverse() {
+        for (int i = 0; i < size / 2; i++)
+            swap(arr[i], arr[size - i - 1]);
+        remove_zeros();
+    }
+
+    void check_zero() {
+        if (size == 1 && arr[0] == 0)
+            sign = 0;
+    }
 
 public:
-
-    Number() : value(nullptr), size(0) {} //default constructor 
-
-    ~Number() 
-    {
-        delete[] value;
-        value = nullptr;
+    BigInt() {
+        resize(1);
     }
 
-    Number(const char* num) //constructor with string
-    {
-        size = strlen(num); 
-        value = new char[size+1];
-        for (int i = 0; i != size; ++i)
-        {
-            if (num[i] >= '0' || num[i] <= '9')
-                value[i] = num[i];
+    BigInt(int n) {
+        resize(1);
+        if (n < 0) {
+            sign = 1;
+            n = -n;
         }
-    } 
-
-    Number(char* values, long long sz) : value(values), size(sz) {}
-
-    Number(const Number& other) : size(other.size) {
-        value = new char[size];
-        memcpy(value, other.value, size * sizeof(char));
+        int i = 0;
+        do {
+            if (i == size)
+                resize(size + 1);
+            arr[i++] = n % 10;
+            n /= 10;
+        } while (n);
+        remove_zeros();
     }
-    Number(Number&& other) noexcept : value(other.value), size(other.size)
-    {
-        other.value = nullptr; 
-        other.size = 0;
+
+    BigInt(const BigInt& n) {
+        sign = n.sign;
+        resize(n.size);
+        for (int i = 0; i < size; i++)
+            arr[i] = n.arr[i];
     }
-    Number& operator=(Number&& other) noexcept {
-        if (this != &other) {
-            delete[] value;
 
-            value = other.value;
-            size = other.size;
+    BigInt(char* str) {
+        if (str == nullptr)
+            return;
+        if (str[0] == '-') {
+            sign = 1;
+            str++;
+        }
+        int len = strlen(str);
+        resize(len);
+        for (int i = 0; i < len; i++) {
+            arr[len - i - 1] = str[i] - '0';
+        }
+        check_zero();
+    }
 
-            other.value = nullptr;
-            other.size = 0;
+    ~BigInt() {
+        currentMemory -= size * sizeof(char); //-
+        delete[] arr;
+    }
+
+    BigInt& operator=(const BigInt& n) {
+        if (&n != this) {
+            sign = n.sign;
+            resize(n.size);
+            for (int i = 0; i < size; i++)
+                arr[i] = n.arr[i];
         }
         return *this;
     }
-    void shift(char* num, long long polySize) const {
-        for (long long i = 0; i < polySize - 1; ++i) {
-            if ((num[i] - '0') >= 10) {         
-                num[i + 1] += (num[i] - '0') / 10; 
-                num[i] = ((num[i] - '0') % 10) + '0'; 
+
+    bool operator==(const BigInt& n) {
+        if (size == n.size) {
+            for (int i = 0; i < size; i++)
+                if (arr[i] != n.arr[i])
+                    return 0;
+        }
+        else
+            return 0;
+        return sign == n.sign;
+    }
+
+    bool operator!=(const BigInt& n) {
+        return !(*this == n);
+    }
+
+    bool operator>(const BigInt& n) {
+        if (sign != n.sign)
+            return sign == 0;
+        if (size != n.size) {
+            if (sign == 0)
+                return size > n.size;
+            else
+                return size < n.size;
+        }
+        for (int i = size - 1; i >= 0; i--)
+            if (arr[i] > n.arr[i])
+                return 1;
+            else if (arr[i] < n.arr[i])
+                return 0;
+        return 0;
+    }
+
+    bool operator<(const BigInt& n) {
+        return !(*this > n) && !(*this == n);
+    }
+
+    bool operator>=(const BigInt& n) {
+        return !(*this < n);
+    }
+
+    bool operator<=(const BigInt& n) {
+        return !(*this > n);
+    }
+
+    BigInt operator-() const {
+        BigInt res = *this;
+        res.sign = !res.sign;
+        res.check_zero();
+        return res;
+    }
+
+    BigInt abs() const {
+        BigInt res = *this;
+        res.sign = 0;
+        return res;
+    }
+
+    BigInt operator+(const BigInt& n) {
+        if (sign == n.sign) {
+            int mx_size = max(size, n.size);
+            BigInt res = *this;
+            res.resize(mx_size + 1);
+            int carry = 0;
+            for (int i = 0; i < n.size || carry; i++) {
+                int sum = res.arr[i] + (i < n.size ? n.arr[i] : 0) + carry;
+                res.arr[i] = sum % 10;
+                carry = sum / 10;
             }
+            res.remove_zeros();
+            return res;
         }
-    } 
+        else if (sign == 0)
+            return *this - (-n);
+        else
+            return -(-(*this) - n);
+    }
 
-    Number operator*(const Number& other) const
-    {
-        long long resultsize = size + other.size; 
-        char* resultNum = new char[resultsize];
-        memset(resultNum, 0, resultsize*sizeof(char)); 
-        for (int i = 0; i < size; ++i)
-        {
-            for (int j = 0; j < other.size; ++j)
-            {
-                resultNum[i + j] += (value[i] - '0') * (value[j] - '0');
+    BigInt& operator+=(const BigInt& n) {
+        *this = *this + n;
+        return *this;
+    }
+
+    BigInt operator-(const BigInt& n) {
+        if (sign == n.sign) {
+            if (this->abs() < n.abs())
+                return -((BigInt)n - *this);
+            BigInt res = *this;
+            for (int i = 0; i < n.size; i++) {
+                int ri = res.arr[i] - n.arr[i];
+                if (ri < 0) {
+                    ri += 10;
+                    res.arr[i + 1]--;
+                }
+                res.arr[i] = ri;
             }
+            res.remove_zeros();
+            res.check_zero();
+            return res;
         }
-        shift(resultNum, resultsize); 
-        return Number(resultNum, resultsize);
-
+        else
+            return *this + (-n);
     }
 
-    Number operator*(const long long num) const
+    BigInt& operator-=(const BigInt& n) {
+        *this = *this - n;
+        return *this;
+    }
+
+    BigInt operator*(const BigInt& n) {
+        BigInt res = 0;
+        res.sign = sign ^ n.sign;
+        res.resize(size + n.size);
+        for (int i = 0; i < n.size; i++) {
+            int carry = 0;
+            for (int j = 0; j < size; j++) {
+                int prod = arr[j] * n.arr[i] + carry + res.arr[i + j];
+                res.arr[i + j] = prod % 10;
+                carry = prod / 10;
+            }
+            if (carry)
+                res.arr[i + size] += carry;
+        }
+        res.remove_zeros();
+        res.check_zero();
+        return res;
+    }
+
+    BigInt& operator*=(const BigInt& n) {
+        *this = *this * n;
+        return *this;
+    }
+
+    friend ostream& operator<<(ostream& os, const BigInt& n) {
+        if (n.sign)
+            os << '-';
+        if (n.arr)
+            for (int i = n.size - 1; i >= 0; i--)
+                os << (int)n.arr[i];
+        return os;
+    }
+
+    friend istream& operator>>(istream& is, BigInt& n) {
+        n.sign = 0;
+        n.resize(1);
+        int i = 0;
+        char ch = is.get();
+        if (ch == '-')
+            n.sign = 1;
+        else
+            n.arr[i++] = ch - '0';
+        while ((ch = is.get()) && ('0' <= ch && ch <= '9')) {
+            if (i >= n.size)
+                n.resize(n.size * 2);
+            n.arr[i++] = ch - '0';
+        }
+        n.resize(i);
+        n.reverse();
+        return is;
+    }
+
+    char* toString(char* str, int mx) {
+        if (str == nullptr)
+            return nullptr;
+        if (size + sign + 1 > mx)
+            return nullptr;
+        int i = 0;
+        if (sign)
+            str[i++] = '-';
+        for (int j = size - 1; j >= 0; j--)
+            str[i++] = '0' + arr[j];
+        str[i] = 0;
+        return str;
+    }
+    BigInt randint(int element_size)
     {
-        long long resultsize = size + 1;
-        char* resultNum = new char[resultsize];
-        memset(resultNum, 0, resultsize * sizeof(char));
-        for (int i = 0; i < size; ++i)
+        BigInt res = 1 + rand() % 9;
+        for (int i = 0; i < element_size - 1; i++)
         {
-            resultNum[i] = value[i] * num;
+            res = (res << 1) + rand() % 10;
+            return res;
+
         }
-
-        shift(resultNum, resultsize);
-        return Number(resultNum, resultsize);
-
     }
-
-
-    Number powerOfTwo(int exponent) const {
-        Number result("1");
-        for (int i = 0; i < exponent; i++) {
-            result = result * 2;  // Используем перегруженный оператор умножения
-        }
-        return result;
+    BigInt operator<<(int n) {
+        if (n <= 0 || *this == 0)
+            return *this;
+        BigInt res = 0;
+        res.resize(size + n);
+        for (int i = 0; i < size; i++)
+            res.arr[n + i] = arr[i];
+        return res;
     }
-
-    // Операция деления
-    //Number divide(const Number& divisor) {
-    //     Проверка на деление на ноль
-    //    if (strcmp(divisor.value, "0") == 0) {
-    //        throw std::runtime_error("Ошибка: деление на ноль");
-    //    }
-
-    //     Если делимое меньше делителя, частное равно 0
-    //    if (*this < divisor) {
-    //        return Number("0");
-    //    }
-
-    //     Определяем максимальное значение c, при котором 2^c * divisor <= *this
-    //    int c = 0;
-
-    //    while (!(Number(*this) >= (powerOfTwo(c) * divisor) && (Number(*this) < powerOfTwo(c + 1) * divisor))) {
-    //        c++;
-    //    }
-
-    //     Рекурсивный вызов с вычитанием 2^c * divisor
-    //    Number quotient = (Number(*this) - powerOfTwo(c) * divisor).divide(divisor) + powerOfTwo(c);
-
-    //    return quotient;
-    //}
-
-    // Генерация случайного числа
-    //void randomNum(int n) {
-    //    srand(time(NULL));
-    //    int i = 0;
-    //    Number maximum = powerOfTwo(n);
-    //    Number minimum = powerOfTwo(n - 1) + Number("1");
-
-    //     Выравнивание строк по длине
-    //    minimum.value = std::string(maximum.value.length() - minimum.value.length(), '0') + minimum.value;
-    //    bool bigger = true, smaller = true;
-
-    //     Формирование случайного числа в диапазоне от минимального до максимального
-    //    for (int i = 0; i < maximum.value.length(); i++) {
-    //        if (i == 0) {
-    //            value += to_string(rand() % (maximum.value[0] - '0' - (minimum.value[0] - '0') + 1) + (minimum.value[0] - '0'));
-    //            continue;
-    //        }
-    //        if (bigger && value[i - 1] == maximum.value[i - 1]) {
-    //            value += to_string(rand() % (maximum.value[i] - '0'));
-    //            smaller = false;
-    //            continue;
-    //        }
-    //        if (smaller && value[i - 1] == minimum.value[i - 1]) {
-    //            bigger = false;
-    //            value += to_string(rand() % (9 - (minimum.value[i] - '0') + 1) + (minimum.value[i] - '0'));
-    //            continue;
-    //        }
-    //        value += to_string(rand() % 10);
-    //        bigger = false;
-    //        smaller = false;
-    //    }
-
-    //    leadZero();  // исправленный вызов функции leadZero без аргумента
-    //}
-
-
-    void write() {
-        for (int i = 0; i < size; i++) {
-            cout << value[i] - '0';
-        }
-        cout << "\n";
-    }
-
-    // Удаление ведущих нулей
-    //void leadZero() {
-    //    int count = 0;
-    //     Удаление ведущих нулей
-    //    while (count < value.length() && value[count] == '0') {
-    //        count++;
-    //    }
-    //     Обновляем значение объекта
-    //    value = value.substr(count);
-    //     Если строка пустая, устанавливаем значение "0"
-    //    if (value.empty()) {
-    //        value = "0";
-    //    }
-    //}
-
-    // Переворот строки
-    //string reverseStr(string str) {
-    //    char ch;
-    //    for (int index = 0, len = str.length(); index < len / 2; index++) {
-    //        ch = str[index];
-    //        str[index] = str[len - 1 - index];
-    //        str[len - 1 - index] = ch;
-    //    }
-    //    return str;
-    //}
-
-    // Возведение в степень 2 (2^c)
-    //Number powerOfTwo(int c) {
-    //    if (c < 31) {
-    //        return Number(to_string(1 << c));
-    //    }
-    //    string number = "1" + std::string(c, '0');
-    //    return Number(number);
-    //}
-
-    // Операции с числами
-    //Number operator + (Number number2) {
-    //    string result = "";
-    //    int borrow = 0;
-    //    int i = value.length() - 1;
-    //    int j = number2.value.length() - 1;
-    //    while (i >= 0 || j >= 0) {
-    //        int x = (i >= 0) ? (value[i--] - '0') : 0;
-    //        int y = (j >= 0) ? (number2.value[j--] - '0') : 0;
-    //        int sum = (x + borrow) + y;
-    //        borrow = (sum >= 10) ? 1 : 0;
-    //        if (sum >= 10) sum -= 10;
-    //        result += sum + '0';
-    //    }
-    //    return leadZero(), Number(reverseStr(result));
-    //}
-
-    //Number operator - (Number number2) {
-    //    int borrow = 0;
-    //    int i = value.length() - 1;
-    //    int j = number2.value.length() - 1;
-    //    string result = "";
-    //    while (i >= 0 || j >= 0) {
-    //        int x = (i >= 0) ? (value[i--] - '0') : 0;
-    //        int y = (j >= 0) ? (number2.value[j--] - '0') : 0;
-    //        int diff = (x - borrow) - y;
-    //        borrow = (diff < 0) ? 1 : 0;
-    //        if (diff < 0) diff += 10;
-    //        result += diff + '0';
-    //    }
-    //    result = reverseStr(result);
-    //    leadZero();
-    //    return *this;
-    //}
-
-    //Number operator * (Number number2) {
-    //    int i = value.length() - 1;
-    //    int j = number2.value.length() - 1;
-    //    string result = std::string(value.length() + number2.value.length(), '0');
-    //    for (int i = 0; i <= value.length(); i++) {
-    //        int carry = 0;
-    //        for (int j = 0; j < number2.value.length(); j++) {
-    //            int x = value[i] - '0';
-    //            int y = number2.value[j] - '0';
-    //            int prod = x * y + carry;
-    //            carry = prod / 10;
-    //            result[i + j] = (prod % 10) + '0';
-    //        }
-    //    }
-    //    return Number(result);
-    //}
-
-    //bool operator < (Number number2) {
-    //    int len1 = value.length();
-    //    int len2 = number2.value.length();
-    //    if (len1 != len2) return len1 < len2;
-    //    int i = 0;
-    //    while (i < len1 && value[i] == number2.value[i]) {
-    //        i++;
-    //    }
-    //    return i < len1 && (value[i] < number2.value[i]);
-    //}
-
-    //bool operator >= (Number number2) {
-    //    int len1 = value.length();
-    //    int len2 = number2.value.length();
-    //    if (len1 != len2) return len1 > len2;
-    //    int i = 0;
-    //    while (i < len1 && value[i] == number2.value[i]) {
-    //        i++;
-    //    }
-    //    return i <= len1 && (value[i] >= number2.value[i]);
-    //}
+    
 };
 
 int main() {
-
-    /*Number res;
-    Number ost; */  
-
-    char* num1 = new char[1000]; 
-    /*char* num2 = new char[1000];*/
-
-    cin >> num1; 
-
-    Number Num1(num1);
-    /*Number Num2(num2);*/
-    Number res = Num1 * 3;
-    res.write();
-
-
-
-    /*res = num1.divide(num2);
-    cout << "Num1: ";
-    num1.write();
-    cout << "Num2: ";
-    num2.write();
-    cout << "Div: ";
-    res.write();
-    cout << "Mod: ";
-    ost = num1 - res * num2;
-    ost.write();*/
-
-    return 0;
+    srand(time(NULL));
+    int size;
+    
 }

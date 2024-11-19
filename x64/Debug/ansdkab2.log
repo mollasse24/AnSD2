@@ -1,3 +1,5 @@
 ﻿  ansdkab2.cpp
-Z:\VSproject\ansdkab2\ansdkab2\ansdkab2.cpp(93,37): warning C4244: =: преобразование "__int64" в "char", возможна потеря данных
+Z:\VSproject\ansdkab2\ansdkab2\ansdkab2.cpp(83,17): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+Z:\VSproject\ansdkab2\ansdkab2\ansdkab2.cpp(302,15): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+Z:\VSproject\ansdkab2\ansdkab2\ansdkab2.cpp(288,1): warning C4715: BigInt::randint: значение возвращается не при всех путях выполнения
   ansdkab2.vcxproj -> Z:\VSproject\ansdkab2\x64\Debug\ansdkab2.exe
