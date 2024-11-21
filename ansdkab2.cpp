@@ -43,7 +43,11 @@ class BigInt {
     void check_zero() {
         if (size == 1 && arr[0] == 0)
             sign = 0;
+    } 
+    bool isZero() const {
+        return size == 1 && arr[0] == 0;
     }
+
 
 public:
     BigInt() {
@@ -102,17 +106,103 @@ public:
         }
         return *this;
     }
-
-    bool operator==(const BigInt& n) {
-        if (size == n.size) {
-            for (int i = 0; i < size; i++)
-                if (arr[i] != n.arr[i])
-                    return 0;
+    // Оператор сравнения BigInt с int
+    bool operator==(int n) const {
+        // Если n равно 0, проверим, равен ли BigInt нулю
+        if (n == 0) {
+            if (size != 1) return false; // BigInt с нулем должен содержать ровно 1 цифру
+            return arr[0] == 0 && !sign; // Проверяем, что число равно 0 и нет знака минус
         }
-        else
-            return 0;
-        return sign == n.sign;
+
+        // Если n не равно 0, создаём объект BigInt для сравнения
+        BigInt bInt(n);
+        return *this == bInt;
     }
+
+
+
+    BigInt operator/(const BigInt& n) {
+        if (n.isZero()) { // вместо n == 0
+            throw runtime_error("Division by zero!");
+        }
+
+        // Определяем знак результата
+        BigInt divisor = n.abs();
+        BigInt dividend = this->abs();
+        BigInt quotient = 0;
+        BigInt remainder = 0;
+
+        // Для оптимизации работы, будем использовать сдвиги
+        int dividend_size = dividend.size;
+        int divisor_size = divisor.size;
+
+        // Позиция деления
+        for (int i = dividend_size - 1; i >= 0; i--) {
+            // Сдвиг остатков
+            remainder = remainder * 10 + dividend.arr[i];
+
+            // Проверяем, сколько раз делитель помещается в остатке
+            int count = 0;
+            while (remainder >= divisor) {
+                remainder = remainder - divisor;
+                count++;
+            }
+
+            // Записываем цифру в результат
+            quotient = quotient * 10 + count;
+        }
+
+        // Возвращаем результат с нужным знаком
+        quotient.sign = this->sign ^ n.sign;
+        quotient.remove_zeros();
+        return quotient;
+    }
+
+    BigInt operator%(const BigInt& n) {
+        if (n == 0) {
+            throw runtime_error("Modulo by zero!");
+        }
+
+        BigInt divisor = n.abs();
+        BigInt dividend = this->abs();
+        BigInt remainder = 0;
+
+        // Для оптимизации работы, будем использовать сдвиги
+        int dividend_size = dividend.size;
+
+        // Позиция деления
+        for (int i = dividend_size - 1; i >= 0; i--) {
+            // Сдвиг остатков
+            remainder = remainder * 10 + dividend.arr[i];
+
+            // Вычитаем, пока остаток больше или равен делителю
+            while (remainder >= divisor) {
+                remainder = remainder - divisor;
+            }
+        }
+
+        // Возвращаем остаток с нужным знаком
+        remainder.sign = this->sign;
+        remainder.remove_zeros();
+        return remainder;
+    }
+
+
+    bool operator==(const BigInt& other) const {
+        // Сравнение знаков
+        if (sign != other.sign) return false;
+
+        // Сравнение размера
+        if (size != other.size) return false;
+
+        // Посимвольное сравнение
+        for (size_t i = 0; i < size; ++i) {
+            if (arr[i] != other.arr[i]) return false;
+        }
+
+        return true;
+    }
+
 
     bool operator!=(const BigInt& n) {
         return !(*this == n);
