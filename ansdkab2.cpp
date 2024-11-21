@@ -2,9 +2,6 @@
 #include <cstring>
 #include <ctime>
 
-#define ull unsigned long long
-#define MIN_SIZE 10
-
 using namespace std;
 
 long long currentMemory = 0, maxMemory = 0;
@@ -95,6 +92,7 @@ public:
     ~BigInt() {
         currentMemory -= size * sizeof(char); //-
         delete[] arr;
+        arr = nullptr;
     }
 
     BigInt& operator=(const BigInt& n) {
@@ -106,53 +104,34 @@ public:
         }
         return *this;
     }
-    // Оператор сравнения BigInt с int
-    bool operator==(int n) const {
-        // Если n равно 0, проверим, равен ли BigInt нулю
+  
+    bool operator==(int n) const {        
         if (n == 0) {
-            if (size != 1) return false; // BigInt с нулем должен содержать ровно 1 цифру
-            return arr[0] == 0 && !sign; // Проверяем, что число равно 0 и нет знака минус
-        }
-
-        // Если n не равно 0, создаём объект BigInt для сравнения
+            if (size != 1) return false; 
+            return arr[0] == 0 && !sign; 
+        }     
         BigInt bInt(n);
         return *this == bInt;
     }
-
-
-
     BigInt operator/(const BigInt& n) {
-        if (n.isZero()) { // вместо n == 0
+        if (n.isZero()) { 
             throw runtime_error("Division by zero!");
-        }
-
-        // Определяем знак результата
+        }       
         BigInt divisor = n.abs();
         BigInt dividend = this->abs();
         BigInt quotient = 0;
-        BigInt remainder = 0;
-
-        // Для оптимизации работы, будем использовать сдвиги
+        BigInt remainder = 0;      
         int dividend_size = dividend.size;
         int divisor_size = divisor.size;
-
-        // Позиция деления
         for (int i = dividend_size - 1; i >= 0; i--) {
-            // Сдвиг остатков
-            remainder = remainder * 10 + dividend.arr[i];
-
-            // Проверяем, сколько раз делитель помещается в остатке
+            remainder = remainder * 10 + dividend.arr[i];            
             int count = 0;
             while (remainder >= divisor) {
                 remainder = remainder - divisor;
                 count++;
-            }
-
-            // Записываем цифру в результат
+            }          
             quotient = quotient * 10 + count;
-        }
-
-        // Возвращаем результат с нужным знаком
+        }        
         quotient.sign = this->sign ^ n.sign;
         quotient.remove_zeros();
         return quotient;
@@ -165,49 +144,29 @@ public:
 
         BigInt divisor = n.abs();
         BigInt dividend = this->abs();
-        BigInt remainder = 0;
-
-        // Для оптимизации работы, будем использовать сдвиги
-        int dividend_size = dividend.size;
-
-        // Позиция деления
-        for (int i = dividend_size - 1; i >= 0; i--) {
-            // Сдвиг остатков
-            remainder = remainder * 10 + dividend.arr[i];
-
-            // Вычитаем, пока остаток больше или равен делителю
+        BigInt remainder = 0;        
+        int dividend_size = dividend.size;        
+        for (int i = dividend_size - 1; i >= 0; i--) {            
+            remainder = remainder * 10 + dividend.arr[i];            
             while (remainder >= divisor) {
                 remainder = remainder - divisor;
             }
-        }
-
-        // Возвращаем остаток с нужным знаком
+        }        
         remainder.sign = this->sign;
         remainder.remove_zeros();
         return remainder;
     }
-
-
-    bool operator==(const BigInt& other) const {
-        // Сравнение знаков
-        if (sign != other.sign) return false;
-
-        // Сравнение размера
-        if (size != other.size) return false;
-
-        // Посимвольное сравнение
+    bool operator==(const BigInt& other) const {     
+        if (sign != other.sign) return false;       
+        if (size != other.size) return false;     
         for (size_t i = 0; i < size; ++i) {
             if (arr[i] != other.arr[i]) return false;
         }
-
         return true;
     }
-
-
     bool operator!=(const BigInt& n) {
         return !(*this == n);
     }
-
     bool operator>(const BigInt& n) {
         if (sign != n.sign)
             return sign == 0;
@@ -221,8 +180,7 @@ public:
             if (arr[i] > n.arr[i])
                 return 1;
             else if (arr[i] < n.arr[i])
-                return 0;
-        return 0;
+                return 0;      
     }
 
     bool operator<(const BigInt& n) {
@@ -353,7 +311,7 @@ public:
         return is;
     }
 
-    char* toString(char* str, int mx) {
+    /*char* toString(char* str, int mx) {
         if (str == nullptr)
             return nullptr;
         if (size + sign + 1 > mx)
@@ -365,7 +323,8 @@ public:
             str[i++] = '0' + arr[j];
         str[i] = 0;
         return str;
-    }
+    }*/ 
+
     BigInt randint(int element_size)
     {
         BigInt res = 1 + rand() % 9;
@@ -390,6 +349,14 @@ public:
 
 int main() {
     srand(time(NULL));
-    int size;
+    char* num1 = new char[1000]; 
+    char* num2 = new char[1000];
+    cin >> num1 >> num2;
+    BigInt a{ num1 };
+    BigInt b{ num2 };
+    BigInt c = a / b; 
+    BigInt d = a % b;
+    cout << c << " " << d << endl;
+ 
     
 }
