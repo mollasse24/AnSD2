@@ -114,28 +114,29 @@ public:
         return *this == bInt;
     }
     BigInt operator/(const BigInt& n) {
-        if (n.isZero()) { 
-            throw runtime_error("Division by zero!");
-        }       
+        if (n.isZero()) {
+            throw runtime_error("Division by zero!");  
+        }
         BigInt divisor = n.abs();
         BigInt dividend = this->abs();
         BigInt quotient = 0;
-        BigInt remainder = 0;      
+        BigInt remainder = 0;
         int dividend_size = dividend.size;
         int divisor_size = divisor.size;
         for (int i = dividend_size - 1; i >= 0; i--) {
-            remainder = remainder * 10 + dividend.arr[i];            
+            remainder = remainder * 10 + dividend.arr[i];
             int count = 0;
             while (remainder >= divisor) {
                 remainder = remainder - divisor;
                 count++;
-            }          
+            }
             quotient = quotient * 10 + count;
-        }        
+        }
         quotient.sign = this->sign ^ n.sign;
         quotient.remove_zeros();
         return quotient;
     }
+
 
     BigInt operator%(const BigInt& n) {
         if (n == 0) {
@@ -292,7 +293,7 @@ public:
         return os;
     }
 
-    friend istream& operator>>(istream& is, BigInt& n) {
+    friend istream& operator>>(istream& is, BigInt& n) {//ввод
         n.sign = 0;
         n.resize(1);
         int i = 0;
@@ -348,15 +349,16 @@ public:
 };
 
 int main() {
-    srand(time(NULL));
-    char* num1 = new char[1000]; 
-    char* num2 = new char[1000];
-    cin >> num1 >> num2;
-    BigInt a{ num1 };
-    BigInt b{ num2 };
-    BigInt c = a / b; 
-    BigInt d = a % b;
-    cout << c << " " << d << endl;
+    try
+    {
+        BigInt a, b, c; 
+        cin >> a >> b; 
+        c = a / b; 
+    }
+    catch (const runtime_error& e) {
+        cout << "Error: " << e.what() << endl; 
+    }
+    return 0;
  
     
 }
