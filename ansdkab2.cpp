@@ -113,15 +113,16 @@ public:
         BigInt bInt(n);
         return *this == bInt;
     }
+
     BigInt operator/(const BigInt& n) {
         if (n.isZero()) {
             throw runtime_error("Division by zero!");  
         }
         BigInt divisor = n.abs();
-        BigInt dividend = this->abs();
-        BigInt quotient = 0;
+        BigInt dividend = this->abs();      
         BigInt remainder = 0;
-        int dividend_size = dividend.size;
+        BigInt quotient = 0; 
+        /*int dividend_size = dividend.size;
         int divisor_size = divisor.size;
         for (int i = dividend_size - 1; i >= 0; i--) {
             remainder = remainder * 10 + dividend.arr[i];
@@ -131,10 +132,30 @@ public:
                 count++;
             }
             quotient = quotient * 10 + count;
-        }
+        }*/
+        algorithm(dividend, divisor, quotient, remainder);
         quotient.sign = this->sign ^ n.sign;
         quotient.remove_zeros();
         return quotient;
+    }
+    
+
+    
+    void algorithm(const BigInt& dividend, const BigInt& divisor, BigInt& quotient, BigInt& remainder)
+    {
+        quotient = 0;
+        remainder = dividend;
+        while (remainder >= divisor) {
+            BigInt power = divisor;
+            long long c = 0;
+            while ((power << 1) <= remainder) {  
+                power = power << 1;
+                c++;
+            }
+            quotient += BigInt(1) << c;  
+            remainder -= power;         
+        }
+        
     }
 
 
@@ -145,18 +166,21 @@ public:
 
         BigInt divisor = n.abs();
         BigInt dividend = this->abs();
-        BigInt remainder = 0;        
-        int dividend_size = dividend.size;        
+        BigInt remainder = 0;  
+        BigInt quotient = 0;
+        algorithm(dividend, divisor, quotient, remainder);
+       /* int dividend_size = dividend.size;        
         for (int i = dividend_size - 1; i >= 0; i--) {            
             remainder = remainder * 10 + dividend.arr[i];            
             while (remainder >= divisor) {
                 remainder = remainder - divisor;
             }
-        }        
+        } */       
         remainder.sign = this->sign;
         remainder.remove_zeros();
         return remainder;
     }
+
     bool operator==(const BigInt& other) const {     
         if (sign != other.sign) return false;       
         if (size != other.size) return false;     
@@ -326,34 +350,38 @@ public:
         return str;
     }*/ 
 
-    BigInt randint(int element_size)
-    {
-        BigInt res = 1 + rand() % 9;
-        for (int i = 0; i < element_size - 1; i++)
-        {
-            res = (res << 1) + rand() % 10;
-            return res;
-
+    BigInt randint(int element_size) {
+        BigInt res = BigInt(1 + rand() % 9);
+        for (int i = 0; i < element_size - 1; i++) {
+            res = (res << 1) + BigInt(rand() % 10);
         }
+        return res;
     }
+
     BigInt operator<<(int n) {
         if (n <= 0 || *this == 0)
             return *this;
-        BigInt res = 0;
+        BigInt res = *this;
         res.resize(size + n);
-        for (int i = 0; i < size; i++)
-            res.arr[n + i] = arr[i];
+        for (int i = size - 1; i >= 0; i--)
+            res.arr[i + n] = res.arr[i];
+        for (int i = 0; i < n; i++)
+            res.arr[i] = 0;
         return res;
     }
+
     
 };
 
 int main() {
     try
     {
-        BigInt a, b, c; 
+        BigInt a, b, c, d; 
         cin >> a >> b; 
         c = a / b; 
+        d = a % b; 
+        cout << c << endl; 
+        cout << d << endl;
     }
     catch (const runtime_error& e) {
         cout << "Error: " << e.what() << endl; 

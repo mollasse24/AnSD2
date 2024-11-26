@@ -1,4 +1,5 @@
 ﻿  ansdkab2.cpp
 Z:\VSproject\ansdkab2\ansdkab2\ansdkab2.cpp(84,17): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-Z:\VSproject\ansdkab2\ansdkab2\ansdkab2.cpp(185,1): warning C4715: BigInt::operator>: значение возвращается не при всех путях выполнения
+Z:\VSproject\ansdkab2\ansdkab2\ansdkab2.cpp(155,38): warning C4244: аргумент: преобразование "__int64" в "int", возможна потеря данных
+Z:\VSproject\ansdkab2\ansdkab2\ansdkab2.cpp(209,1): warning C4715: BigInt::operator>: значение возвращается не при всех путях выполнения
   ansdkab2.vcxproj -> Z:\VSproject\ansdkab2\x64\Debug\ansdkab2.exe
