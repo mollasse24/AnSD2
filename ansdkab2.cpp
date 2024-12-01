@@ -135,27 +135,10 @@ public:
             } 
             quotient.sign = this->sign ^ n.sign;
 
-        }
-        /*else
-        {
-            quotient.sign = this->sign ^ n.sign;
-            remainder.sign = this->sign;
+        }       
 
-        }*/
+        quotient.sign = this->sign ^ n.sign;        
 
-        quotient.sign = this->sign ^ n.sign;
-        remainder.sign = this->sign;
-        
-
-        /*if (!(this->sign * n.sign))
-        {
-            while (remainder < 0)
-            {
-                remainder += divisor;
-                quotient += 1;
-            }
-
-        }*/
         quotient.check_zero();
         quotient.remove_zeros();
         return quotient;
@@ -203,19 +186,10 @@ public:
             }
             quotient.sign = this->sign ^ n.sign;
 
-        }
-        /*else
-        {
-            quotient.sign = this->sign ^ n.sign;
-            remainder.sign = this->sign;
-
-        }*/
+        }        
         quotient.sign = this->sign ^ n.sign;
-        remainder.sign = this->sign;
-       
-        /*remainder.sign = this->sign;
-        while (remainder < 0)       
-            remainder += divisor; */          
+       /* remainder.sign = this->sign; */     
+                
         remainder.check_zero();
         remainder.remove_zeros();
         return remainder;
@@ -423,6 +397,7 @@ int main()
         d = a % b; 
         cout << c << endl; 
         cout << d << endl;
+        cout << currentMemory << " " << maxMemory;
     }
     catch (const runtime_error& e) {
         cout << "Error: " << e.what() << endl; 
