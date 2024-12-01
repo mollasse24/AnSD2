@@ -122,19 +122,41 @@ public:
         BigInt dividend = this->abs();      
         BigInt remainder = 0;
         BigInt quotient = 0; 
-        /*int dividend_size = dividend.size;
-        int divisor_size = divisor.size;
-        for (int i = dividend_size - 1; i >= 0; i--) {
-            remainder = remainder * 10 + dividend.arr[i];
-            int count = 0;
-            while (remainder >= divisor) {
-                remainder = remainder - divisor;
-                count++;
-            }
-            quotient = quotient * 10 + count;
-        }*/
+        
         algorithm(dividend, divisor, quotient, remainder);
+
+        if (((this->sign * n.sign) == 1) || ((this->sign == 1) && (n.sign == 0)))
+        {
+            remainder.sign = this->sign;
+            while (remainder < 0)
+            {
+                remainder += divisor;
+                quotient += 1;
+            } 
+            quotient.sign = this->sign ^ n.sign;
+
+        }
+        /*else
+        {
+            quotient.sign = this->sign ^ n.sign;
+            remainder.sign = this->sign;
+
+        }*/
+
         quotient.sign = this->sign ^ n.sign;
+        remainder.sign = this->sign;
+        
+
+        /*if (!(this->sign * n.sign))
+        {
+            while (remainder < 0)
+            {
+                remainder += divisor;
+                quotient += 1;
+            }
+
+        }*/
+        quotient.check_zero();
         quotient.remove_zeros();
         return quotient;
     }
@@ -142,7 +164,8 @@ public:
 
     
     void algorithm(const BigInt& dividend, const BigInt& divisor, BigInt& quotient, BigInt& remainder)
-    {
+    {       
+
         quotient = 0;
         remainder = dividend;
         while (remainder >= divisor) {
@@ -152,9 +175,9 @@ public:
                 power = power << 1;
                 c++;
             }
-            quotient += BigInt(1) << c;  
+            quotient += BigInt(1) << c;
             remainder -= power;         
-        }
+        }        
         
     }
 
@@ -169,14 +192,31 @@ public:
         BigInt remainder = 0;  
         BigInt quotient = 0;
         algorithm(dividend, divisor, quotient, remainder);
-       /* int dividend_size = dividend.size;        
-        for (int i = dividend_size - 1; i >= 0; i--) {            
-            remainder = remainder * 10 + dividend.arr[i];            
-            while (remainder >= divisor) {
-                remainder = remainder - divisor;
+
+        if (((this->sign * n.sign) == 1) || ((this->sign == 1) && (n.sign == 0)))
+        {
+            remainder.sign = this->sign;
+            while (remainder < 0)
+            {
+                remainder += divisor;
+                quotient += 1;
             }
-        } */       
+            quotient.sign = this->sign ^ n.sign;
+
+        }
+        /*else
+        {
+            quotient.sign = this->sign ^ n.sign;
+            remainder.sign = this->sign;
+
+        }*/
+        quotient.sign = this->sign ^ n.sign;
         remainder.sign = this->sign;
+       
+        /*remainder.sign = this->sign;
+        while (remainder < 0)       
+            remainder += divisor; */          
+        remainder.check_zero();
         remainder.remove_zeros();
         return remainder;
     }
@@ -373,7 +413,8 @@ public:
     
 };
 
-int main() {
+int main() 
+{
     try
     {
         BigInt a, b, c, d; 
