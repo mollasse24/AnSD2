@@ -18,6 +18,7 @@ class BigInt {
         for (int i = 0; i < mn_size; i++)
             new_arr[i] = arr[i];
         delete[] arr;
+        arr = nullptr;
         currentMemory -= size * sizeof(char); //-
         size = new_size;
         arr = new_arr;
@@ -51,6 +52,12 @@ public:
         resize(1);
     }
 
+    BigInt(const BigInt& n, int sz) {
+        resize(sz);
+        for (int i = 0; i < sz; i++)
+            arr[i] = (i < n.size) ? n.arr[i] : 0; 
+    }
+
     BigInt(int n) {
         resize(1);
         if (n < 0) {
@@ -66,6 +73,7 @@ public:
         } while (n);
         remove_zeros();
     }
+    
 
     BigInt(const BigInt& n) {
         sign = n.sign;
@@ -93,6 +101,7 @@ public:
         currentMemory -= size * sizeof(char); //-
         delete[] arr;
         arr = nullptr;
+        size = 0;
     }
 
     BigInt& operator=(const BigInt& n) {
@@ -152,14 +161,14 @@ public:
         quotient = 0;
         remainder = dividend;
         while (remainder >= divisor) {
-            BigInt power = divisor;
+            BigInt double_divisor = divisor;
             long long c = 0;
-            while ((power << 1) <= remainder) {  
-                power = power << 1;
+            while ((double_divisor << 1) <= remainder) {
+                double_divisor = double_divisor << 1;
                 c++;
             }
             quotient += BigInt(1) << c;
-            remainder -= power;         
+            remainder -= double_divisor;
         }        
         
     }
@@ -245,15 +254,16 @@ public:
         BigInt res = *this;
         res.sign = 0;
         return res;
-    }
+    }    
 
     BigInt operator+(const BigInt& n) {
         if (sign == n.sign) {
             int mx_size = max(size, n.size);
-            BigInt res = *this;
-            res.resize(mx_size + 1);
+            /*BigInt res = *this; 
+            res.resize(mx_size + 1);*/
+            BigInt res(*this, mx_size + 1);
             int carry = 0;
-            for (int i = 0; i < n.size || carry; i++) {
+            for (int i = 0; i < (mx_size + 1) || carry; i++) {
                 int sum = res.arr[i] + (i < n.size ? n.arr[i] : 0) + carry;
                 res.arr[i] = sum % 10;
                 carry = sum / 10;
@@ -397,7 +407,7 @@ int main()
         d = a % b; 
         cout << c << endl; 
         cout << d << endl;
-        cout << currentMemory << " " << maxMemory;
+        /*cout << currentMemory << " " << maxMemory;*/
     }
     catch (const runtime_error& e) {
         cout << "Error: " << e.what() << endl; 
